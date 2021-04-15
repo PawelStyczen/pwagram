@@ -48,7 +48,11 @@ function displayConfirmNotification() {
       vibrate: [100, 50, 200],
       badge: '/src/images/icons/app-icons-96x96.png', //? only android
       tag: 'confirm-notification', //? stacking notifications
-      renotify: true
+      renotify: true,
+      actions: [
+        { action: 'confirm', title: 'OK', icon: '/src/images/icons/app-icons-96x96.png' },
+        { action: 'cancel', title: 'CANCEL', icon: '/src/images/icons/app-icons-96x96.png' }
+      ]
     };
 
     //? Service worker registration allows for listening to sw events
