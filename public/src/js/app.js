@@ -62,23 +62,47 @@ function configurePushSub() {
     return;
   }
 
-  let reg;
+  var reg;
   navigator.serviceWorker.ready
     .then(function (swreg) {
       //? check if this sw has a sub for this device
+      reg = swreg;
       return swreg.pushManager.getSubscription();
     })
     .then(function (sub) {
       if (sub === null) {
         //TODO create a new sub
-        var vapidPublicKey = 'BJst-HoWUMiAaRh6zR8WuqFcJ1X2eRb8n9-HWkdXJ6028DLiz_TQ9zIe8OTOhgT5ODgPcZKaN954qfcnQdhlPFg';
-        reg.pushManager.subscribe({
-          userVisableOnly: true,
+        var vapidPublicKey = "BJst-HoWUMiAaRh6zR8WuqFcJ1X2eRb8n9-HWkdXJ6028DLiz_TQ9zIe8OTOhgT5ODgPcZKaN954qfcnQdhlPFg";
+        var convertVapidPublicKey = urlBase64ToUint8Array(vapidPublicKey);
+        return reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertVapidPublicKey,
         });
       } else {
         //WE have a sub
       }
-    });
+    })
+    .then(function (newSub) {
+      return fetch(
+        "https://pwgram-ae7bc-default-rtdb.firebaseio.com/subscriptions.json",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify(newSub),
+        }
+      );
+    })
+    .then(function (res) {
+      if (res.ok) {
+        displayConfirmNotification();
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    })
 }
 
 function askForNotificationPermission() {
