@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 var cors = require("cors")({ origin: true });
+const webpush = require('web-push');
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -29,8 +30,29 @@ exports.storePostData = functions.https.onRequest((request, response) => {
       })
       .then(function () {
         response
-          .status(201)
-          .json({ message: "data stored", id: request.body.id });
+          webpush.setVapidDetails('mailto:design@pawelstyczen.com', 'BMrS_SD8kBPZtct8W1_uRTgUFkF_JdwrLPojkEB1jyESqYtn6GQp0MGwxJ-WIFZKG0iYQ1Mzl2e4Pi8CUz-IzcM', 'dIGWRDo2liEwXmILSISwsa-n2hHH5AKIuKs9gYic_qQ');
+          return admin.database().ref('subscriptions').once('value');
+         
+      })
+      .then(function(subscriptions) {
+        //? looping all subscriptions
+        //? adding the config for each sub
+        subscriptions.forEach((sub) => {
+          const pushConfig = {
+            endpoint: sub.val().endpoint,
+            keys: {
+              auth: sub.val().keys.auth,
+              p256dh: sub.val().keys.p256dh
+            }
+            
+          };
+
+          webpush.sendNotification(pushConfig, JSON.stringify({title: 'New Post', content: 'New Post Added!'}))
+          .catch((err) => {
+            console.log(err)
+          })
+        });
+        response.status(201).json({message: 'Data stored', id: request.body.id});
       })
       .catch(function (err) {
         response.status(500).json({ error: err }); //! error handling 
