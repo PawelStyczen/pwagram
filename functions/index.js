@@ -30,23 +30,24 @@ exports.storePostData = functions.https.onRequest((request, response) => {
       })
       .then(function () {
         response
-          webpush.setVapidDetails('mailto:design@pawelstyczen.com', 'BMrS_SD8kBPZtct8W1_uRTgUFkF_JdwrLPojkEB1jyESqYtn6GQp0MGwxJ-WIFZKG0iYQ1Mzl2e4Pi8CUz-IzcM', 'dIGWRDo2liEwXmILSISwsa-n2hHH5AKIuKs9gYic_qQ');
+          webpush.setVapidDetails('mailto:design@pawelstyczen.com', 'BN4R2oi1sLk5qgUhpf0jMqxUAUKgK7ZTSIOPaRRScVv9k4fGScgpIcmfHpw8AMHOVvCCuuoDDfm4honRXjMZFk4', 'ABku1eDRkZTRXtz2QZb7Qt3OVqGDqJMcScbl7EmWL0E');
           return admin.database().ref('subscriptions').once('value');
          
       })
       .then(function(subscriptions) {
         //? looping all subscriptions
         //? adding the config for each sub
-        subscriptions.forEach((sub) => {
-          const pushConfig = {
+        subscriptions.forEach(function (sub) {
+          var pushConfig = {
             endpoint: sub.val().endpoint,
+            //? adding vapid authentication to each subscription
             keys: {
               auth: sub.val().keys.auth,
               p256dh: sub.val().keys.p256dh
             }
             
           };
-
+          //* SENDING THE NOTIFICATION
           webpush.sendNotification(pushConfig, JSON.stringify({title: 'New Post', content: 'New Post Added!'}))
           .catch((err) => {
             console.log(err)

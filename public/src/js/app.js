@@ -72,11 +72,11 @@ function configurePushSub() {
     .then(function (sub) {
       if (sub === null) {
         //TODO create a new sub
-        var vapidPublicKey = "BMrS_SD8kBPZtct8W1_uRTgUFkF_JdwrLPojkEB1jyESqYtn6GQp0MGwxJ-WIFZKG0iYQ1Mzl2e4Pi8CUz-IzcM";
+        var vapidPublicKey = "BN4R2oi1sLk5qgUhpf0jMqxUAUKgK7ZTSIOPaRRScVv9k4fGScgpIcmfHpw8AMHOVvCCuuoDDfm4honRXjMZFk4";
         var convertVapidPublicKey = urlBase64ToUint8Array(vapidPublicKey);
         return reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: convertVapidPublicKey,
+          applicationServerKey: convertVapidPublicKey
         });
       } else {
         //WE have a sub

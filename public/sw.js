@@ -1,7 +1,7 @@
 importScripts("/src/js/idb.js");
 importScripts("/src/js/utility.js");
 
-var CACHE_STATIC_NAME = "static-v33";
+var CACHE_STATIC_NAME = "static-v36";
 var CACHE_DYNAMIC_NAME = "dynamic-v4";
 var STATIC_FILES = [
   "/",
@@ -228,3 +228,29 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('notificationclose', (event) => {
   console.log('Notification was closed', event)
 })
+
+//* LISTEN TO PUSH MSG
+
+self.addEventListener('push', (event) => {
+  console.log('push notification received', event);
+
+  //? fallback in case we dont get the data in the push  
+  var data = {title: 'New!', content: ' Something new happend!'};
+
+  if (event.data) {
+    data = JSON.parse(event.data.text());
+  }
+
+
+  //*show notification
+  var options = {
+    body: data.content,
+    icon: '/src/images/icons/app-icon-96x96.png',
+    badge: '/src/images/icons/app-icon-96x96.png'
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+
+});
