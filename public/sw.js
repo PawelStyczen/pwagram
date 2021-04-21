@@ -1,7 +1,7 @@
 importScripts("/src/js/idb.js");
 importScripts("/src/js/utility.js");
 
-var CACHE_STATIC_NAME = "static-v36";
+var CACHE_STATIC_NAME = "static-v37";
 var CACHE_DYNAMIC_NAME = "dynamic-v4";
 var STATIC_FILES = [
   "/",
@@ -209,48 +209,62 @@ self.addEventListener("sync", (event) => {
   }
 });
 
-
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener("notificationclick", (event) => {
   const notification = event.notification;
   const action = event.action;
 
   console.log(notification);
 
-  if(action==='confirm') {
-    console.log('confirm was chosen');
+  if (action === "confirm") {
+    console.log("confirm was chosen");
     notification.close();
   } else {
     console.log(action);
-    notification.close();
-  }
-})
+    event.waitUntil(
+      clients.matchAll().then(function (clis) {
+        //? check if browser is open
+        var client = clis.find(function (c) {
+          return c.visibilityState === "visible";
+        });
 
-self.addEventListener('notificationclose', (event) => {
-  console.log('Notification was closed', event)
-})
+        if (client !== undefined) {
+          client.navigate(notification.data.url);
+          client.focus();
+        } else {
+          clients.openWindow(notification.data.url);
+        }
+        notification.close();
+      })
+    );
+    
+  }
+});
+
+self.addEventListener("notificationclose", (event) => {
+  console.log("Notification was closed", event);
+});
 
 //* LISTEN TO PUSH MSG
 
-self.addEventListener('push', (event) => {
-  console.log('push notification received', event);
+self.addEventListener("push", (event) => {
+  console.log("push notification received", event);
 
-  //? fallback in case we dont get the data in the push  
-  var data = {title: 'New!', content: ' Something new happend!'};
+  //? fallback in case we dont get the data in the push
+  var data = { title: "New!", content: " Something new happend!", openUrl: '/' };
 
   if (event.data) {
     data = JSON.parse(event.data.text());
   }
 
-
   //*show notification
   var options = {
     body: data.content,
-    icon: '/src/images/icons/app-icon-96x96.png',
-    badge: '/src/images/icons/app-icon-96x96.png'
-  }
+    icon: "/src/images/icons/app-icon-96x96.png",
+    badge: "/src/images/icons/app-icon-96x96.png",
+    data: {
+      url: data.openUrl
+    }
+  };
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
-
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
