@@ -7,41 +7,52 @@ var sharedMomentsArea = document.querySelector("#shared-moments");
 var form = document.querySelector("form");
 var titleInput = document.querySelector("#title");
 var locationInput = document.querySelector("#location");
-var videoPlayer = document.querySelector('#player');
-var canvasElement = document.querySelector('#canvas');
-var captureButton = document.querySelector('#capture-button-btn');
-var imagePicker = document.querySelector('#image-picker');
-var imagePickerArea = document.querySelector('#pick-image');
+var videoPlayer = document.querySelector("#player");
+var canvasElement = document.querySelector("#canvas");
+var captureButton = document.querySelector('#capture-btn');
+var imagePicker = document.querySelector("#image-picker");
+var imagePickerArea = document.querySelector("#pick-image");
 
 //* native os functions
+//* compatibility check
 function initializeMedia() {
   //? enabling functions in a progressive way
-  if (!('mediaDevices' in navigator)) {
+  if (!("mediaDevices" in navigator)) {
     //? if original mediadevices is not egzisting (no support) - support is now more then 93%
-    //? then create your own object to mimic the function 
+    //? then create your own object to mimic the function
     navigator.mediaDevices = {};
-  })
-
-  if (!('getUserMedia' in navigator.mediaDevices)){
-    //? create the getUserMedia in our created mediaDevices
-    navigator.mediaDevices.getUserMedia = function(constraints) {
-      var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-
-      if(!getUserMedia) {
-        return Promise.reject(new Error('getUserMedia is not implemented!'));
-      }
-
-      return new Promise(function(resolve, reject) {
-        getUserMedia.call(navigator, constraints, resolve, reject);
-      });
-    }
   }
 
+  if (!("getUserMedia" in navigator.mediaDevices)) {
+    //? create the getUserMedia in our created mediaDevices
+    navigator.mediaDevices.getUserMedia = function(constraints) {
+      var getUserMedia =
+        navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+      if (!getUserMedia) {
+        return Promise.reject(new Error("getUserMedia is not implemented!"));
+      }
+
+      return new Promise(function (resolve, reject) {
+        getUserMedia.call(navigator, constraints, resolve, reject);
+      });
+    };
+  }
+
+  //* get media feed
+  navigator.mediaDevices.getUserMedia({video: true})
+  .then(function(stream){
+    videoPlayer.srcObject = stream;
+    videoPlayer.style.display = 'block';
+  })
+  .catch(function(err) {
+    imagePickerArea.style.display = 'block';
+  });
 }
 
 function openCreatePostModal() {
-  createPostArea.style.transform = 'translateY(0)';
-
+  createPostArea.style.transform = "translateY(0)";
+  initializeMedia();
 
   if (deferredPrompt) {
     deferredPrompt.prompt();
@@ -69,7 +80,10 @@ function openCreatePostModal() {
 }
 
 function closeCreatePostModal() {
-  createPostArea.style.transform = 'translateY(100vh)';
+  imagePickerArea.style.display = 'none';
+  videoPlayer.style.display = 'none';
+  canvasElement.style.display = 'none';
+  createPostArea.style.transform = "translateY(100vh)";
 }
 
 shareImageButton.addEventListener("click", openCreatePostModal);
@@ -156,10 +170,9 @@ if ("indexedDB" in window) {
   });
 }
 
-
 //fallback without sync support
 sendData = () => {
-  fetch('https://pwgram-ae7bc-default-rtdb.firebaseio.com/posts.json', {
+  fetch("https://pwgram-ae7bc-default-rtdb.firebaseio.com/posts.json", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -186,27 +199,26 @@ form.addEventListener("submit", (event) => {
 
   closeCreatePostModal();
 
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
-    navigator.serviceWorker.ready
-      .then(function(sw) {
-        var post = {
-          id: new Date().toISOString(),
-          title: titleInput.value,
-          location: locationInput.value
-        };
-        writeData('sync-posts', post)
-          .then(function() {
-            return sw.sync.register('sync-new-posts');
-          })
-          .then(function() {
-            var snackbarContainer = document.querySelector('#confirmation-toast');
-            var data = {message: 'Your Post was saved for syncing!'};
-            snackbarContainer.MaterialSnackbar.showSnackbar(data);
-          })
-          .catch(function(err) {
-            console.log(err);
-          });
-      });
+  if ("serviceWorker" in navigator && "SyncManager" in window) {
+    navigator.serviceWorker.ready.then(function (sw) {
+      var post = {
+        id: new Date().toISOString(),
+        title: titleInput.value,
+        location: locationInput.value,
+      };
+      writeData("sync-posts", post)
+        .then(function () {
+          return sw.sync.register("sync-new-posts");
+        })
+        .then(function () {
+          var snackbarContainer = document.querySelector("#confirmation-toast");
+          var data = { message: "Your Post was saved for syncing!" };
+          snackbarContainer.MaterialSnackbar.showSnackbar(data);
+        })
+        .catch(function (err) {
+          console.log(err);
+        });
+    });
   } else {
     sendData();
   }
