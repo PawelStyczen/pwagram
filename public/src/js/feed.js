@@ -7,6 +7,37 @@ var sharedMomentsArea = document.querySelector("#shared-moments");
 var form = document.querySelector("form");
 var titleInput = document.querySelector("#title");
 var locationInput = document.querySelector("#location");
+var videoPlayer = document.querySelector('#player');
+var canvasElement = document.querySelector('#canvas');
+var captureButton = document.querySelector('#capture-button-btn');
+var imagePicker = document.querySelector('#image-picker');
+var imagePickerArea = document.querySelector('#pick-image');
+
+//* native os functions
+function initializeMedia() {
+  //? enabling functions in a progressive way
+  if (!('mediaDevices' in navigator)) {
+    //? if original mediadevices is not egzisting (no support) - support is now more then 93%
+    //? then create your own object to mimic the function 
+    navigator.mediaDevices = {};
+  })
+
+  if (!('getUserMedia' in navigator.mediaDevices)){
+    //? create the getUserMedia in our created mediaDevices
+    navigator.mediaDevices.getUserMedia = function(constraints) {
+      var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+      if(!getUserMedia) {
+        return Promise.reject(new Error('getUserMedia is not implemented!'));
+      }
+
+      return new Promise(function(resolve, reject) {
+        getUserMedia.call(navigator, constraints, resolve, reject);
+      });
+    }
+  }
+
+}
 
 function openCreatePostModal() {
   createPostArea.style.transform = 'translateY(0)';
