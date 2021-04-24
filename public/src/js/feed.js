@@ -9,9 +9,10 @@ var titleInput = document.querySelector("#title");
 var locationInput = document.querySelector("#location");
 var videoPlayer = document.querySelector("#player");
 var canvasElement = document.querySelector("#canvas");
-var captureButton = document.querySelector('#capture-btn');
+var captureButton = document.querySelector("#capture-btn");
 var imagePicker = document.querySelector("#image-picker");
 var imagePickerArea = document.querySelector("#pick-image");
+var picture;
 
 //* native os functions
 //* compatibility check
@@ -25,7 +26,7 @@ function initializeMedia() {
 
   if (!("getUserMedia" in navigator.mediaDevices)) {
     //? create the getUserMedia in our created mediaDevices
-    navigator.mediaDevices.getUserMedia = function(constraints) {
+    navigator.mediaDevices.getUserMedia = function (constraints) {
       var getUserMedia =
         navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
@@ -40,15 +41,36 @@ function initializeMedia() {
   }
 
   //* get media feed
-  navigator.mediaDevices.getUserMedia({video: true})
-  .then(function(stream){
-    videoPlayer.srcObject = stream;
-    videoPlayer.style.display = 'block';
-  })
-  .catch(function(err) {
-    imagePickerArea.style.display = 'block';
-  });
+  navigator.mediaDevices
+    .getUserMedia({ video: true })
+    .then(function (stream) {
+      videoPlayer.srcObject = stream;
+      videoPlayer.style.display = "block";
+    })
+    .catch(function (err) {
+      imagePickerArea.style.display = "block";
+    });
 }
+
+//* take picture
+captureButton.addEventListener("click", function (event) {
+  canvasElement.style.display = "block";
+  videoPlayer.style.display = "none";
+  captureButton.style.display = "none";
+  var context = canvasElement.getContext("2d");
+  context.drawImage(
+    videoPlayer,
+    0,
+    0,
+    canvas.width,
+    videoPlayer.videoHeight / (videoPlayer.videoWidth / canvas.width)
+  );
+
+  videoPlayer.srcObject.getVideoTracks().forEach((track) => {
+    track.stop();
+  });
+  picture = dataURItoBlob(canvasElement.toDataURL());
+});
 
 function openCreatePostModal() {
   createPostArea.style.transform = "translateY(0)";
@@ -80,9 +102,9 @@ function openCreatePostModal() {
 }
 
 function closeCreatePostModal() {
-  imagePickerArea.style.display = 'none';
-  videoPlayer.style.display = 'none';
-  canvasElement.style.display = 'none';
+  imagePickerArea.style.display = "none";
+  videoPlayer.style.display = "none";
+  canvasElement.style.display = "none";
   createPostArea.style.transform = "translateY(100vh)";
 }
 
@@ -172,17 +194,17 @@ if ("indexedDB" in window) {
 
 //fallback without sync support
 sendData = () => {
+  var id = new Date().toISOString();
+  var postData = new FormData();
+
+  postData.append("id", id);
+  postData.append("title", titleInput.value);
+  postData.append("location", locationInput.value);
+  postData.append("file", picture, id + ".png");
+
   fetch("https://pwgram-ae7bc-default-rtdb.firebaseio.com/posts.json", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      id: new Date().toISOString(),
-      title: titleInput.value,
-      location: locationInput.value,
-    }),
+    body: postData,
   }).then((res) => {
     console.log("Sent data", res);
     updateUI();
@@ -205,6 +227,7 @@ form.addEventListener("submit", (event) => {
         id: new Date().toISOString(),
         title: titleInput.value,
         location: locationInput.value,
+        picture: picture
       };
       writeData("sync-posts", post)
         .then(function () {
