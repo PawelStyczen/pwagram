@@ -69,6 +69,8 @@ captureButton.addEventListener("click", function (event) {
   videoPlayer.srcObject.getVideoTracks().forEach((track) => {
     track.stop();
   });
+
+  //?save to png
   picture = dataURItoBlob(canvasElement.toDataURL());
 });
 
