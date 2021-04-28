@@ -2,7 +2,7 @@ var functions = require("firebase-functions");
 var admin = require("firebase-admin");
 var cors = require("cors")({ origin: true });
 var webpush = require("web-push");
-var formidable = require("formidable");
+
 var fs = require("fs");
 var UUID = require("uuid-v4");
 var os = require("os");

@@ -1,13 +1,14 @@
 importScripts("/src/js/idb.js");
 importScripts("/src/js/utility.js");
 
-var CACHE_STATIC_NAME = "static-v47";
-var CACHE_DYNAMIC_NAME = "dynamic-v4";
+var CACHE_STATIC_NAME = "static-v50";
+var CACHE_DYNAMIC_NAME = "dynamic-v5";
 var STATIC_FILES = [
   "/",
   "/index.html",
   "/offline.html",
   "/src/js/app.js",
+  "/src/js/utility.js",
   "/src/js/feed.js",
   "/src/js/idb.js",
   "/src/js/promise.js",
@@ -181,6 +182,8 @@ self.addEventListener("sync", (event) => {
           postData.append('id', dt.id);
           postData.append('title', dt.title);
           postData.append('location', dt.location);
+          postData.append('rawLocationLat', dt.rawLocation.lat);
+          postData.append('rawLocationLng', dt.rawLocation.lng);
           postData.append('file', dt.picture, dt.id + '.png');
 
           fetch(
@@ -207,6 +210,7 @@ self.addEventListener("sync", (event) => {
   }
 });
 
+//*Notification click
 self.addEventListener("notificationclick", (event) => {
   const notification = event.notification;
   const action = event.action;

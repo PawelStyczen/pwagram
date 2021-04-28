@@ -13,6 +13,43 @@ var captureButton = document.querySelector("#capture-btn");
 var imagePicker = document.querySelector("#image-picker");
 var imagePickerArea = document.querySelector("#pick-image");
 var picture;
+var locationBtn = document.querySelector("#location-btn");
+var locationLoader = document.querySelector("#location-loader");
+
+
+//* get LOCATION 
+locationBtn.addEventListener("click", function (event) {
+  if (!("geolocation" in navigator)) {
+    return;
+  }
+
+  locationBtn.style.display = "none";
+  locationLoader.style.display = "block";
+
+  navigator.geolocation.getCurrentPosition(
+    function (position) {
+      locationBtn.style.display = "inline";
+      locationLoader.style.display = "none";
+      fetchedLocation = {lat: position.coords.latitude, lng: 0};
+      locationInput.value = 'In munich';
+      document.querySelector('#manual-location').classList.add('is-focused');
+    },
+    function (err) {
+      console.log(err);
+      locationBtn.style.display = "inline";
+      locationLoader.style.display = "none";
+      alert("Couldnt fetch location, please enter manually");
+      fetchedLocation = {lat: null, lng: null};
+    },
+    { timeout: 7000 }
+  );
+});
+
+function initializeLocation() {
+  if (!("geolocation" in navigator)) {
+    locationBtn.style.display = "none";
+  }
+}
 
 //* native os functions
 //* compatibility check
@@ -74,9 +111,15 @@ captureButton.addEventListener("click", function (event) {
   picture = dataURItoBlob(canvasElement.toDataURL());
 });
 
+imagePicker.addEventListener("change", function (event) {
+  picture = event.target.files[0];
+});
+
+//* UI CONTROLS////////////////////////////////////////////
 function openCreatePostModal() {
   createPostArea.style.transform = "translateY(0)";
   initializeMedia();
+  initializeLocation();
 
   if (deferredPrompt) {
     deferredPrompt.prompt();
@@ -108,6 +151,8 @@ function closeCreatePostModal() {
   videoPlayer.style.display = "none";
   canvasElement.style.display = "none";
   createPostArea.style.transform = "translateY(100vh)";
+  locationBtn.style.display = "inline";
+  locationLoader.style.display = "none";
 }
 
 shareImageButton.addEventListener("click", openCreatePostModal);
@@ -167,6 +212,7 @@ function updateUI(data) {
   }
 }
 
+//* SEND DATA
 var url = "https://pwgram-ae7bc-default-rtdb.firebaseio.com/posts.json";
 var networkDataReceived = false;
 
@@ -202,6 +248,8 @@ sendData = () => {
   postData.append("id", id);
   postData.append("title", titleInput.value);
   postData.append("location", locationInput.value);
+  postData.append("rawLocationLat", fetchedLocation.lat);
+  postData.append("rawLocationLng", fetchedLocation.lng);
   postData.append("file", picture, id + ".png");
 
   fetch("https://pwgram-ae7bc-default-rtdb.firebaseio.com/posts.json", {
@@ -229,7 +277,8 @@ form.addEventListener("submit", (event) => {
         id: new Date().toISOString(),
         title: titleInput.value,
         location: locationInput.value,
-        picture: picture
+        picture: picture,
+        rawLocation: fetchedLocation,
       };
       writeData("sync-posts", post)
         .then(function () {
