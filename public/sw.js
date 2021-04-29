@@ -1,7 +1,7 @@
 importScripts("/src/js/idb.js");
 importScripts("/src/js/utility.js");
 
-var CACHE_STATIC_NAME = "static-v50";
+var CACHE_STATIC_NAME = "static-v54";
 var CACHE_DYNAMIC_NAME = "dynamic-v5";
 var STATIC_FILES = [
   "/",
@@ -193,7 +193,7 @@ self.addEventListener("sync", (event) => {
               body: postData
             }
           )
-            .then((res) => {
+            .then(function(res){
               console.log("Sent data", res);
               if (res.ok) {
                 res.json().then(function (resData) {
@@ -201,7 +201,7 @@ self.addEventListener("sync", (event) => {
                 });
               }
             })
-            .catch((err) => {
+            .catch(function(err) {
               console.log("ERROr while sending data", err);
             });
         }
@@ -211,7 +211,7 @@ self.addEventListener("sync", (event) => {
 });
 
 //*Notification click
-self.addEventListener("notificationclick", (event) => {
+self.addEventListener("notificationclick", function(event){
   const notification = event.notification;
   const action = event.action;
 
