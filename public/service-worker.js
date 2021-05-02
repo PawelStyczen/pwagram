@@ -1,4 +1,6 @@
 importScripts("workbox-sw.prod.v2.1.3.js");
+importScripts("/src/js/idb.js");
+importScripts("/src/js/utility.js");
 
 const workboxSW = new self.WorkboxSW();
 
@@ -28,6 +30,25 @@ workboxSW.router.registerRoute(
   })
 );
 
+workboxSW.router.registerRoute(
+  "https://pwgram-ae7bc-default-rtdb.firebaseio.com/posts.json", function(args) {
+    return fetch(args.event.request).then((res) => {
+      var clonedRes = res.clone();
+      clearAllData("posts")
+        .then(() => {
+          return clonedRes.json();
+        })
+        .then((data) => {
+          for (var key in data) {
+            writeData("posts", data[key]);
+          }
+        });
+
+      return res;
+    })
+  }
+);
+
 workboxSW.precache([
   {
     "url": "404.html",
@@ -51,7 +72,7 @@ workboxSW.precache([
   },
   {
     "url": "service-worker.js",
-    "revision": "f3cbce2e685721379cfff6b26e331eef"
+    "revision": "45da8777b7f85a22f0f5a1496f2cc03c"
   },
   {
     "url": "src/css/app.css",
@@ -95,7 +116,7 @@ workboxSW.precache([
   },
   {
     "url": "sw-base.js",
-    "revision": "22c3e1b7718e2cab5d08b95eba869fd3"
+    "revision": "afe15802b45651f7ab67a37bab93906c"
   },
   {
     "url": "sw.js",
